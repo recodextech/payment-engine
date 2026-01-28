@@ -1,0 +1,46 @@
+package writers
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+
+	"payment-engine/internal/domain/adaptors"
+	"payment-engine/internal/domain/application"
+	"payment-engine/internal/http/responses"
+	"payment-engine/pkg/errors"
+
+	"github.com/recodextech/container"
+	"github.com/recodextech/krouter"
+)
+
+type JobListWriter struct {
+	log adaptors.Logger
+}
+
+func (w *JobListWriter) Response(_ context.Context, rw http.ResponseWriter, _ *http.Request,
+	payload krouter.HttpPayload,
+) error {
+	var err error
+	out := payload.Body.(responses.GetJobsByWorkerResponse)
+
+	rw.Header().Add("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusOK)
+
+	resBody, err := json.Marshal(out)
+	if err != nil {
+		return ResponseWriterError{errors.Wrap(err, errorWritingResponse)}
+	}
+	_, err = rw.Write(resBody)
+	if err != nil {
+		return ResponseWriterError{errors.Wrap(err, errorWritingResponse)}
+	}
+
+	return nil
+}
+
+func (w *JobListWriter) Init(container container.Container) error {
+	w.log = container.Resolve(application.ModuleLogger).(adaptors.Logger).NewLog(adaptors.LoggerPrefixed(
+		`responses.job.list`))
+	return nil
+}
