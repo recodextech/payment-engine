@@ -26,12 +26,12 @@ func (s *WalletService) Init(c container.Container) error {
 // CreateWallet creates a new wallet for the account
 func (s *WalletService) CreateWallet(ctx context.Context, req request.CreateWalletRequest) (string, error) {
 	// check if wallet already exists for the account
-	_, existingWallet, err := s.accountWalletRepo.GetWalletByAccountID(ctx, req.AccountID)
+	walletRes, existingWallet, err := s.accountWalletRepo.GetWalletByAccountID(ctx, req.AccountID)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to check existing wallet")
 	}
 	if existingWallet {
-		return "", errors.New("wallet already exists for the account")
+		return walletRes.Payload.ID, nil
 	}
 	// Create wallet event
 	walletEvent := events.AccountWalletEvent{
