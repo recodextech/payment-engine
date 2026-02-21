@@ -16,14 +16,17 @@ func initModules(c container.Container) {
 		application.ModulePprofIndicator,
 
 		// Repositories
-		application.ModuleJobRepo,
+		application.ModuleAccountRepo,
+		application.ModuleAccountWalletRepo,
+		application.ModulePaymentRepo,
 
 		// Adapters
 		application.ModuleSQL,
 		application.MoudleDBConector,
 
 		// Services
-		application.ModuleJobService,
+		application.ModulePaymentService,
+		application.ModuleWalletService,
 
 		// Http
 		application.ModuleHTTP,

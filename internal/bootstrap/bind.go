@@ -19,14 +19,17 @@ func bind(c container.Container) {
 	c.Bind(application.ModuleMetricsReporter, new(metrics.Reporter))
 
 	// Repositories
-	c.Bind(application.ModuleJobRepo, new(repositories.JobRepository))
+	c.Bind(application.ModuleAccountRepo, new(repositories.AccountRepository))
+	c.Bind(application.ModuleAccountWalletRepo, new(repositories.AccountWalletRepository))
+	c.Bind(application.ModulePaymentRepo, new(repositories.PaymentRepository))
 
 	// Adapters
 	c.Bind(application.ModuleSQL, new(db.PostgresDB))
 	c.Bind(application.MoudleDBConector, new(postgres.DBConnector))
 
 	// Services
-	c.Bind(application.ModuleJobService, new(services.JobService))
+	c.Bind(application.ModulePaymentService, new(services.PaymentService))
+	c.Bind(application.ModuleWalletService, new(services.WalletService))
 
 	// http
 	c.Bind(application.ModuleHTTP, new(http.HTTP))

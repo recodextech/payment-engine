@@ -36,66 +36,19 @@ const (
 	HailingProcess ProcessType = `HAILING`
 )
 
-// process status
-type ProcessStatus string
+// payment status
+type PaymentStatus string
 
-func (p ProcessStatus) String() string {
+func (p PaymentStatus) String() string {
 	return string(p)
 }
 
 const (
-	ProcessPending   ProcessStatus = `PENDING`
-	ProcessStarted   ProcessStatus = `STARTED`
-	ProcessCompleted ProcessStatus = `COMPLETED`
-	ProcessCancelled ProcessStatus = `CANCELLED`
+	PaymentPending PaymentStatus = `IN_PROGRESS`
+	PaymentSuccess PaymentStatus = `SUCCESS`
 )
 
-// job types
-type JobType string
-
-func (j JobType) String() string {
-	return string(j)
-}
-
 const (
-	JobRide JobType = `RIDE`
-)
-
-// job status
-type JobStatus string
-
-func (j JobStatus) String() string {
-	return string(j)
-}
-
-const (
-	JobPending   JobStatus = `PENDING`
-	JobAssigned  JobStatus = `ASSIGNED`
-	JobAccepeted JobStatus = `ACCEPTED`
-	JobCancelled JobStatus = `CANCELLED`
-	JobCompleted JobStatus = `COMPLETED`
-)
-
-// location types
-type JobLocationType string
-
-func (j JobLocationType) String() string {
-	return string(j)
-}
-
-const (
-	Pickup JobLocationType = `PICKUP`
-	Drop   JobLocationType = `DROP`
-)
-
-// job asssignment status
-type JobAssignmentStatus string
-
-func (j JobAssignmentStatus) String() string {
-	return string(j)
-}
-
-const (
-	JobAssignmentPending   JobAssignmentStatus = `PENDING`
-	JobAssignmentAccepeted JobAssignmentStatus = `ACCEPTED`
+	WalletStatusActive string = "ACTIVE"
+	WalletStatusHold   string = "HOLD"
 )

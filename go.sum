@@ -147,12 +147,12 @@ github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoG
 github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 h1:MkV+77GLUNo5oJ0jf870itWm3D0Sjh7+Za9gazKc5LQ=
 github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
-github.com/recodextech/api-definitions v0.0.0-20260110160420-348b0380cf5f h1:365e/PSdWNgZvueBn6+P/ICbJ7I5hJeg4YDRf89dXdQ=
-github.com/recodextech/api-definitions v0.0.0-20260110160420-348b0380cf5f/go.mod h1:xy4WiFg9UoTwUcCYwuuXSYxqEVxUbPflrod6FjGUL6g=
+github.com/recodextech/api-definitions v0.0.0-20260221045827-bd48d6710278 h1:5mOsLP+J4dpFKvdP/E61UwmHpZR3G20rdr0R9HOzyQ4=
+github.com/recodextech/api-definitions v0.0.0-20260221045827-bd48d6710278/go.mod h1:xy4WiFg9UoTwUcCYwuuXSYxqEVxUbPflrod6FjGUL6g=
 github.com/recodextech/container v1.0.1 h1:F3yi1SNEDFEJKwUKVmmV4XoYGRNZGLw9z2Apbt5ofZM=
 github.com/recodextech/container v1.0.1/go.mod h1:XSb5gDqrIuiHC1Gn5N1rn+SKvbSm3xHaZxIa5s0agfs=
-github.com/recodextech/krouter v0.0.0 h1:hdUykvqD6aHZ4lnhMwM7VeaH1cgxgkRJfJVsRgBuhx4=
-github.com/recodextech/krouter v0.0.0/go.mod h1:DNCG6tqHhJOYN0tg+u8BhwOExJoYu8T9xg921wiRVb0=
+github.com/recodextech/krouter v0.1.0 h1:6fk5GDP+mxoH7OfQ05jllT2PmIczqjw9uloC8okK0Xg=
+github.com/recodextech/krouter v0.1.0/go.mod h1:DNCG6tqHhJOYN0tg+u8BhwOExJoYu8T9xg921wiRVb0=
 github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
 github.com/rogpeppe/go-internal v1.10.0/go.mod h1:UQnix2H7Ngw/k4C5ijL5+65zddjncjaFoBhdsK/akog=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=

@@ -29,10 +29,13 @@ const (
 
 // Repositories
 const (
-	ModuleJobRepo string = "repositories.job"
+	ModuleAccountRepo       string = "repositories.account"
+	ModulePaymentRepo       string = "repositories.payment"
+	ModuleAccountWalletRepo string = "repositories.account-wallet"
 )
 
 // Services
 const (
-	ModuleJobService string = "services.job"
+	ModulePaymentService string = "services.payment"
+	ModuleWalletService  string = "services.wallet"
 )

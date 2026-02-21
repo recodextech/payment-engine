@@ -1,6 +1,7 @@
 package handlers
 
 const (
-	ModuleGetJobsByWorker = "http-get-jobs-by-worker"
-	ModuleErrorHandler    = "http-error-handler"
+	ModuleCreatePayment = "http-create-payment"
+	ModuleCreateWallet  = "http-create-wallet"
+	ModuleErrorHandler  = "http-error-handler"
 )

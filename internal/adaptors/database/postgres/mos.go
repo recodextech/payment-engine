@@ -137,3 +137,80 @@ func (d *DBConnector) GetDataRowsWithResult(ctx context.Context, table string, c
 	}
 	return row, nil
 }
+
+// InsertDataRow inserts a new row and returns the generated UUID
+func (d *DBConnector) InsertDataRow(ctx context.Context, table string, columns []string, args []any) (string, error) {
+	columns = append(columns, `created_at`)
+	args = append(args, time.Now().UTC())
+
+	var values, columnValues string
+	for index, cl := range columns {
+		values += `$` + strconv.FormatInt(int64(index)+1, 10)
+		columnValues += cl
+		if index != len(columns)-1 {
+			values += `, `
+			columnValues += `, `
+		}
+	}
+
+	query := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s) RETURNING key`, table, columnValues, values)
+	statement, err := d.DatabaseReporter.Prepare(ctx, query)
+	if err != nil {
+		return "", errors.Wrap(err, table+` : insert query failed`)
+	}
+
+	row, err := statement.QueryRowContext(ctx, args...)
+	if err != nil {
+		return "", errors.Wrap(err, `insert execution failed`)
+	}
+
+	var key string
+	_, err = row.Scan(&key)
+	if err != nil {
+		return "", errors.Wrap(err, `scan key failed`)
+	}
+
+	return key, nil
+}
+
+// UpdateDataRow updates an existing row by key
+func (d *DBConnector) UpdateDataRow(ctx context.Context, table string, key string, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return errors.New("no fields to update")
+	}
+
+	var setClauses string
+	var args []interface{}
+	paramIndex := 1
+
+	for column, value := range updates {
+		if setClauses != "" {
+			setClauses += ", "
+		}
+
+		// Handle special case for NOW() function
+		if strValue, ok := value.(string); ok && strValue == "NOW()" {
+			setClauses += fmt.Sprintf("%s = NOW()", column)
+		} else {
+			setClauses += fmt.Sprintf("%s = $%d", column, paramIndex)
+			args = append(args, value)
+			paramIndex++
+		}
+	}
+
+	// Add the key as the last parameter
+	args = append(args, key)
+
+	query := fmt.Sprintf(`UPDATE %s SET %s WHERE key = $%d`, table, setClauses, paramIndex)
+	statement, err := d.DatabaseReporter.Prepare(ctx, query)
+	if err != nil {
+		return errors.Wrap(err, table+` : update query failed`)
+	}
+
+	_, err = statement.ExecContext(ctx, args...)
+	if err != nil {
+		return errors.Wrap(err, `update execution failed`)
+	}
+
+	return nil
+}
