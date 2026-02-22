@@ -28,6 +28,7 @@ type PaymentRepository struct {
 func (r *PaymentRepository) Init(c container.Container) error {
 	r.dbAdaptor = c.Resolve(application.MoudleDBConector).(database.FixFlowDB)
 	r.log = c.Resolve(application.ModuleLogger).(adaptors.Logger).NewLog(adaptors.LoggerPrefixed(`repo.payment`))
+	r.DatabaseReporter = c.Resolve(application.ModuleSQL).(gopostgres.DatabaseReporter)
 	return nil
 }
 

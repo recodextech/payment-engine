@@ -23,19 +23,14 @@ func (h *CreateWalletHandler) Init(c container.Container) error {
 }
 
 func (h *CreateWalletHandler) Handle(ctx context.Context, payload krouter.HttpPayload) (interface{}, error) {
+	payloadData := payload.Body.(request.CreateWalletRequest)
+
 	// Get account_id from header
 	accountID := payload.Header(request.HeaderAccountID.String())
 
-	if accountID == "" {
-		return nil, errors.New("account-id header is required")
-	}
-
-	// Create wallet request
-	req := request.CreateWalletRequest{
-		AccountID: accountID,
-	}
+	payloadData.AccountID = accountID
 	// Call wallet service to create wallet
-	walletID, err := h.walletService.CreateWallet(ctx, req)
+	walletID, err := h.walletService.CreateWallet(ctx, payloadData)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create wallet")
 	}
@@ -43,5 +38,18 @@ func (h *CreateWalletHandler) Handle(ctx context.Context, payload krouter.HttpPa
 	// Return response with wallet ID
 	return responses.CreateWalletResponse{
 		ID: walletID,
+	}, nil
+}
+
+func (h *CreateWalletHandler) HandleInternalWallet(ctx context.Context, payload krouter.HttpPayload) (interface{}, error) {
+	// Call wallet service to create wallet
+	walletIDs, err := h.walletService.CreateInternalWallet(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create wallet")
+	}
+
+	// Return response with wallet ID
+	return responses.CreateInternalWalletResponse{
+		IDs: walletIDs,
 	}, nil
 }

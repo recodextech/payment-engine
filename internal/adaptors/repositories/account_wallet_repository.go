@@ -15,10 +15,6 @@ import (
 	"github.com/recodextech/container"
 )
 
-const (
-	accountWalletTableName = `"fix.account.wallets"`
-)
-
 type AccountWalletRepository struct {
 	dbAdaptor database.FixFlowDB
 	log       adaptors.Logger
@@ -28,6 +24,7 @@ type AccountWalletRepository struct {
 func (r *AccountWalletRepository) Init(c container.Container) error {
 	r.dbAdaptor = c.Resolve(application.MoudleDBConector).(database.FixFlowDB)
 	r.log = c.Resolve(application.ModuleLogger).(adaptors.Logger).NewLog(adaptors.LoggerPrefixed(`repo.account-wallet`))
+	r.DatabaseReporter = c.Resolve(application.ModuleSQL).(gopostgres.DatabaseReporter)
 	return nil
 }
 
@@ -46,7 +43,7 @@ func (r *AccountWalletRepository) CreateWallet(ctx context.Context, accountID st
 	status := domain.WalletStatusActive
 
 	columns := []string{columnParamKey, columnParamAccountID, columnParamType, columnParamMeta, columnParamPayload, columnParamBalance, columnParamStatus}
-	values := []interface{}{wallet.Payload.ID, accountID, wallet.Payload.Type, string(metaJSON), string(valueJSON), wallet.Payload.Balance, status}
+	values := []any{wallet.Payload.ID, accountID, wallet.Payload.Type, string(metaJSON), string(valueJSON), wallet.Payload.Balance, status}
 
 	walletID, err := r.dbAdaptor.InsertDataRow(ctx, domain.AccountWalletTable, columns, values)
 	if err != nil {
@@ -54,6 +51,41 @@ func (r *AccountWalletRepository) CreateWallet(ctx context.Context, accountID st
 	}
 
 	return walletID, nil
+}
+
+// CreateInternalWallets creates a new internal wallet record for an account and returns the wallet ID
+func (r *AccountWalletRepository) CreateInternalWallets(ctx context.Context, accountID string, wallets []events.AccountWalletEvent) ([]string, error) {
+	var walletIDs []string
+	err := r.DatabaseReporter.InTransaction(ctx, func(ctx context.Context) error {
+		for _, wallet := range wallets {
+			metaJSON, err := json.Marshal(wallet.EventMeta)
+			if err != nil {
+				return errors.Wrap(err, "failed to marshal meta")
+			}
+			valueJSON, err := json.Marshal(wallet.Payload)
+			if err != nil {
+				return errors.Wrap(err, "failed to marshal value")
+			}
+
+			status := domain.WalletStatusActive
+
+			columns := []string{columnParamKey, columnParamAccountID, columnParamType, columnParamMeta, columnParamPayload, columnParamBalance, columnParamStatus}
+			values := []any{wallet.Payload.ID, accountID, wallet.Payload.Type, string(metaJSON), string(valueJSON), wallet.Payload.Balance, status}
+
+			walletID, err := r.dbAdaptor.InsertDataRow(ctx, domain.AccountWalletTable, columns, values)
+			if err != nil {
+				return errors.Wrap(err, "failed to create wallet")
+			}
+			walletIDs = append(walletIDs, walletID)
+		}
+
+		return nil
+	}, nil)
+	if err != nil {
+		return []string{}, errors.Wrap(err, "failed to create internal wallet")
+	}
+
+	return walletIDs, nil
 }
 
 // GetWalletByID retrieves a wallet by its ID
@@ -98,29 +130,75 @@ func (r *AccountWalletRepository) GetWalletByID(ctx context.Context, walletID st
 }
 
 // GetWalletByAccountID retrieves wallet(s) for an account
-func (r *AccountWalletRepository) GetWalletByAccountID(ctx context.Context, accountID string) (walletRes events.AccountWalletEvent, exist bool, err error) {
+func (r *AccountWalletRepository) GetWalletsByAccountID(ctx context.Context, accountID string) (walletRes []events.AccountWalletEvent, exist bool, err error) {
 	columns := []string{columnParamAccountID, columnParamType, columnParamMeta, columnParamPayload, columnParamBalance}
 	whereClause := `account_id = $1 AND deleted = false`
 
-	result, err := r.dbAdaptor.GetDataRowWithResult(ctx, domain.AccountWalletTable, columns, whereClause, []interface{}{accountID})
+	rows, err := r.dbAdaptor.GetDataRowsWithResult(ctx, domain.AccountWalletTable, columns, whereClause, []interface{}{accountID})
 	if err != nil {
 		return walletRes, false, errors.Wrap(err, "failed to get wallet")
 	}
-	var walletPayloadBytes, walletMeta []byte
-	var accountIDVar, walletType string
-	var walletBalance float64
 
-	existWallet, err := result.Scan(
+	defer rows.Close()
+
+	for rows.Next() {
+		walletData := events.AccountWalletEvent{}
+		var walletPayloadBytes, walletMeta []byte
+		var accountIDVar, walletType string
+		var walletBalance float64
+		err := rows.Scan(
+			&accountIDVar,
+			&walletType,
+			&walletMeta,
+			&walletPayloadBytes,
+			&walletBalance)
+		if err != nil {
+			return walletRes, false, errors.Wrap(err, "failed to scan wallet row")
+		}
+		err = json.Unmarshal(walletPayloadBytes, &walletData.Payload)
+		if err != nil {
+			return walletRes, false, errors.Wrap(err, "failed to unmarshal wallet payload")
+		}
+
+		err = json.Unmarshal(walletMeta, &walletData.EventMeta)
+		if err != nil {
+			return walletRes, false, errors.Wrap(err, "failed to unmarshal wallet meta")
+		}
+		walletData.Payload.AccountID = accountIDVar
+		walletData.Payload.Type = walletType
+		walletData.Payload.Balance = walletBalance
+		walletRes = append(walletRes, walletData)
+	}
+	if len(walletRes) == 0 {
+		return walletRes, false, nil
+	}
+
+	return walletRes, true, nil
+}
+
+// GetWalletByType retrieves wallet type for an account
+func (r *AccountWalletRepository) GetWalletByType(ctx context.Context, accountID string, walletType domain.WalletType) (walletRes events.AccountWalletEvent, exist bool, err error) {
+	columns := []string{columnParamAccountID, columnParamMeta, columnParamPayload, columnParamBalance}
+	whereClause := `account_id = $1 AND type = $2 AND deleted = false`
+
+	result, err := r.dbAdaptor.GetDataRowWithResult(ctx, domain.AccountWalletTable, columns, whereClause, []interface{}{accountID, walletType.String()})
+	if err != nil {
+		return walletRes, false, errors.Wrap(err, "failed to get wallet")
+	}
+
+	var walletPayloadBytes, walletMeta []byte
+	var accountIDVar string
+	var walletBalance float64
+	exist, err = result.Scan(
 		&accountIDVar,
-		&walletType,
 		&walletMeta,
 		&walletPayloadBytes,
 		&walletBalance)
 	if err != nil {
 		return walletRes, false, errors.Wrap(err, "failed to scan wallet row")
 	}
-	if !existWallet {
-		return walletRes, false, nil
+	if !exist {
+		return walletRes, false, errors.RepositoryDataNotExistError{}
 	}
 	err = json.Unmarshal(walletPayloadBytes, &walletRes.Payload)
 	if err != nil {
@@ -132,7 +210,7 @@ func (r *AccountWalletRepository) GetWalletByAccountID(ctx context.Context, acco
 		return walletRes, false, errors.Wrap(err, "failed to unmarshal wallet meta")
 	}
 	walletRes.Payload.AccountID = accountIDVar
-	walletRes.Payload.Type = walletType
+	walletRes.Payload.Type = walletType.String()
 	walletRes.Payload.Balance = walletBalance
 
 	return walletRes, true, nil

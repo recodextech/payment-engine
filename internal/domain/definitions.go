@@ -52,3 +52,15 @@ const (
 	WalletStatusActive string = "ACTIVE"
 	WalletStatusHold   string = "HOLD"
 )
+
+type WalletType string
+
+func (w WalletType) String() string {
+	return string(w)
+}
+
+const (
+	WalletCash   WalletType = "CASH"
+	WalletPoints WalletType = "POINTS"
+	WalletCredit WalletType = "CREDIT"
+)

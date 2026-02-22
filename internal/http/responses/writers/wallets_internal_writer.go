@@ -14,15 +14,15 @@ import (
 	"github.com/recodextech/krouter"
 )
 
-type WalletWriter struct {
+type WalletsInternalWriter struct {
 	log adaptors.Logger
 }
 
-func (w *WalletWriter) Response(_ context.Context, rw http.ResponseWriter, _ *http.Request,
+func (w *WalletsInternalWriter) Response(_ context.Context, rw http.ResponseWriter, _ *http.Request,
 	payload krouter.HttpPayload,
 ) error {
 	var err error
-	out := payload.Body.(responses.CreateWalletResponse)
+	out := payload.Body.(responses.CreateInternalWalletResponse)
 
 	rw.Header().Add("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
@@ -39,8 +39,8 @@ func (w *WalletWriter) Response(_ context.Context, rw http.ResponseWriter, _ *ht
 	return nil
 }
 
-func (w *WalletWriter) Init(container container.Container) error {
+func (w *WalletsInternalWriter) Init(container container.Container) error {
 	w.log = container.Resolve(application.ModuleLogger).(adaptors.Logger).NewLog(adaptors.LoggerPrefixed(
-		`responses.wallet.create`))
+		`responses.internal_wallet.create`))
 	return nil
 }

@@ -21,3 +21,7 @@ var messages = map[int]string{
 func Msg(code int) string {
 	return messages[code]
 }
+
+type RepositoryDataNotExistError struct {
+	error
+}

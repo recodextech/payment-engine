@@ -33,11 +33,35 @@ func initRoutes(r *Router, c container.Container) {
 	r.router.Handle("/wallet/create",
 		r.krouter.NewHandler(
 			handlers.ModuleCreateWallet,
-			request.NoOp{},
+			request.CreateWalletRequest{},
 			c.Resolve(handlers.ModuleCreateWallet).(*handlers.CreateWalletHandler).Handle,
 			krouter.HandlerWithHeader(request.HeaderAccountID.String(), request.ParamTypeAppUUID, nil),
 			krouter.HandlerWithHeader(request.HeaderTraceID.String(), request.ParamTypeAppUUID, traceIDGenerate),
 			krouter.HandlerWithValidator(c.Resolve(validator.ModuleAccountIDVaidator).(krouter.Validator)),
 			krouter.HandlerWithSuccessHandlerFunc(c.Resolve(writers.ModuleWalletWriter).(responses.GenerateResponse).Response),
 		)).Methods(http.MethodPost)
+
+	// Create internal wallet endpoint
+	r.router.Handle("/internal-wallet/create",
+		r.krouter.NewHandler(
+			handlers.ModuleCreateInternalWallet,
+			request.NoOp{},
+			c.Resolve(handlers.ModuleCreateWallet).(*handlers.CreateWalletHandler).HandleInternalWallet,
+			krouter.HandlerWithHeader(request.HeaderAccountID.String(), request.ParamTypeAppUUID, nil),
+			krouter.HandlerWithHeader(request.HeaderTraceID.String(), request.ParamTypeAppUUID, traceIDGenerate),
+			krouter.HandlerWithValidator(c.Resolve(validator.ModuleAccountIDVaidator).(krouter.Validator)),
+			krouter.HandlerWithSuccessHandlerFunc(c.Resolve(writers.ModuleInternalWalletWriter).(responses.GenerateResponse).Response),
+		)).Methods(http.MethodPost)
+
+	// Get wallets endpoint
+	r.router.Handle("/wallets",
+		r.krouter.NewHandler(
+			handlers.ModuleGetWallets,
+			request.NoOp{},
+			c.Resolve(handlers.ModuleGetWallets).(*handlers.GetWalletsHandler).Handle,
+			krouter.HandlerWithHeader(request.HeaderAccountID.String(), request.ParamTypeAppUUID, nil),
+			krouter.HandlerWithHeader(request.HeaderTraceID.String(), request.ParamTypeAppUUID, traceIDGenerate),
+			krouter.HandlerWithValidator(c.Resolve(validator.ModuleAccountIDVaidator).(krouter.Validator)),
+			krouter.HandlerWithSuccessHandlerFunc(c.Resolve(writers.ModuleGetWalletsWriter).(responses.GenerateResponse).Response),
+		)).Methods(http.MethodGet)
 }
