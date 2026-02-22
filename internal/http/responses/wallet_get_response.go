@@ -7,23 +7,28 @@ type GetWalletsResponse struct {
 }
 
 type WalletPayload struct {
-	ID        string  `json:"id"`
-	AccountID string  `json:"account_id"`
-	Type      string  `json:"type"`
-	Balance   float64 `json:"balance"`
-	Status    string  `json:"status"`
+	ID                 string  `json:"id"`
+	Type               string  `json:"type"`
+	Balance            float64 `json:"balance"`
+	Status             string  `json:"status"`
+	PaymentInformation struct {
+		Method    string            `json:"method"`
+		Reference map[string]string `json:"reference"`
+	} `json:"walletInformation"`
 }
 
 func NewGetWalletsResponse(wallets []events.AccountWalletEvent) GetWalletsResponse {
 	var payload []WalletPayload
 	for _, w := range wallets {
-		payload = append(payload, WalletPayload{
-			ID:        w.Payload.ID,
-			AccountID: w.Payload.AccountID,
-			Type:      w.Payload.Type,
-			Balance:   w.Payload.Balance,
-			Status:    w.Payload.Status,
-		})
+		wallet := WalletPayload{
+			ID:      w.Payload.ID,
+			Type:    w.Payload.Type,
+			Balance: w.Payload.Balance,
+			Status:  w.Payload.Status,
+		}
+		wallet.PaymentInformation.Method = w.Payload.PaymentInfromation.Method
+		wallet.PaymentInformation.Reference = w.Payload.PaymentInfromation.Reference
+		payload = append(payload, wallet)
 	}
 	return GetWalletsResponse{
 		Wallets: payload,

@@ -96,7 +96,7 @@ func (s *WalletService) GetWallets(ctx context.Context, accountID string) ([]eve
 		return nil, errors.Wrap(err, "failed to get wallets")
 	}
 	if !exist {
-		return []events.AccountWalletEvent{}, nil
+		return []events.AccountWalletEvent{}, errors.New(`No wallet exists`)
 	}
 	return wallets, nil
 }
