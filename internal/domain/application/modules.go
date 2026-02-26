@@ -32,6 +32,7 @@ const (
 	ModuleAccountRepo       string = "repositories.account"
 	ModulePaymentRepo       string = "repositories.payment"
 	ModuleAccountWalletRepo string = "repositories.account-wallet"
+	ModuleJobRepo           string = "repositories.job"
 )
 
 // Services

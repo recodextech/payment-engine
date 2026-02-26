@@ -10,4 +10,6 @@ import (
 type PaymentService interface {
 	CreatePayment(ctx context.Context, req request.CreatePaymentRequest) (string, error)
 	UpdatePayment(ctx context.Context, payment events.PaymentEvent) error
+	CancelPayment(ctx context.Context, req request.CancelPaymentRequest) error
+	SuccessPayment(ctx context.Context, req request.SuccessPaymentRequest) error
 }

@@ -38,4 +38,5 @@ const (
 	PathParamWorkerID     ContextParam = "worker_id"
 	PathParamContractorID ContextParam = "contractor_id"
 	PathParamJobID        ContextParam = "job_id"
+	PathParamPaymentID    ContextParam = "payment_id"
 )

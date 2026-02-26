@@ -8,6 +8,7 @@ const (
 	columnParamStatus    = "status"
 	columnParamJobType   = "job_type"
 	columnParamDelete    = "delete"
+	columnParamUpdatedAt = "updated_at"
 
 	columnParamJobID  = "job_id"
 	columnParamAmount = "amount"

@@ -7,4 +7,6 @@ type ValidatorError struct {
 
 const (
 	ErrMsgInvalidAccountID = "invalid account ID"
+	ErrMsgInvalidJobID     = "invalid job ID"
+	ErrMsgInvalidPaymentID = "invalid payment ID"
 )

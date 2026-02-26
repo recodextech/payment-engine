@@ -22,6 +22,7 @@ func bind(c container.Container) {
 	c.Bind(application.ModuleAccountRepo, new(repositories.AccountRepository))
 	c.Bind(application.ModuleAccountWalletRepo, new(repositories.AccountWalletRepository))
 	c.Bind(application.ModulePaymentRepo, new(repositories.PaymentRepository))
+	c.Bind(application.ModuleJobRepo, new(repositories.JobRepository))
 
 	// Adapters
 	c.Bind(application.ModuleSQL, new(db.PostgresDB))

@@ -44,8 +44,9 @@ func (p PaymentStatus) String() string {
 }
 
 const (
-	PaymentPending PaymentStatus = `IN_PROGRESS`
-	PaymentSuccess PaymentStatus = `SUCCESS`
+	PaymentPending   PaymentStatus = `IN_PROGRESS`
+	PaymentSuccess   PaymentStatus = `SUCCESS`
+	PaymentCancelled PaymentStatus = `CANCELLED`
 )
 
 const (

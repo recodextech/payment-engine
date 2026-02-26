@@ -1,5 +1,7 @@
 package validator
 
 const (
-	ModuleAccountIDVaidator = "validator.account.id"
+	ModuleAccountIDValidator = "validator.account.id"
+	ModuleJobIDValidator     = "validator.job.id"
+	ModulePaymentIDValidator = "validator.payment.id"
 )

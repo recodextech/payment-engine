@@ -104,3 +104,23 @@ func (s *PaymentService) UpdatePayment(ctx context.Context, payment events.Payme
 
 	return nil
 }
+
+// CancelPayment cancels an in-progress payment
+func (s *PaymentService) CancelPayment(ctx context.Context, req request.CancelPaymentRequest) error {
+	err := s.paymentRepo.UpdateInProgressPaymentToCancelled(ctx, req.PaymentID)
+	if err != nil {
+		return errors.Wrap(err, "failed to cancel payment")
+	}
+
+	return nil
+}
+
+// SuccessPayment marks an in-progress payment as successful
+func (s *PaymentService) SuccessPayment(ctx context.Context, req request.SuccessPaymentRequest) error {
+	err := s.paymentRepo.UpdateInProgressPaymentToSuccess(ctx, req.PaymentID)
+	if err != nil {
+		return errors.Wrap(err, "failed to update payment to success")
+	}
+
+	return nil
+}

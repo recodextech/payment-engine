@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"payment-engine/internal/domain/application"
+	"payment-engine/internal/domain/service"
 	"payment-engine/internal/http/request"
 	"payment-engine/internal/http/responses"
-	"payment-engine/internal/services"
 	"payment-engine/pkg/errors"
 
 	"github.com/recodextech/container"
@@ -16,11 +16,11 @@ import (
 const CreatePayment = "payment.create"
 
 type CreatePaymentHandler struct {
-	paymentService *services.PaymentService
+	paymentService service.PaymentService
 }
 
 func (h *CreatePaymentHandler) Init(c container.Container) error {
-	h.paymentService = c.Resolve(application.ModulePaymentService).(*services.PaymentService)
+	h.paymentService = c.Resolve(application.ModulePaymentService).(service.PaymentService)
 	return nil
 }
 

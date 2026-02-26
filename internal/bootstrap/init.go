@@ -19,6 +19,7 @@ func initModules(c container.Container) {
 		application.ModuleAccountRepo,
 		application.ModuleAccountWalletRepo,
 		application.ModulePaymentRepo,
+		application.ModuleJobRepo,
 
 		// Adapters
 		application.ModuleSQL,

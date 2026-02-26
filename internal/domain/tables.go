@@ -6,4 +6,5 @@ const (
 	TransactionTable   string = `"fix.payment.transactions"`
 	PlatformFeeTable   string = `"fix.platform.fees"`
 	AccountWalletTable string = `"fix.account.wallets"`
+	JobTable           string = `"fix.job"`
 )
