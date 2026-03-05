@@ -10,6 +10,8 @@ import (
 	"payment-engine/internal/domain/application"
 	"payment-engine/pkg/errors"
 
+	repo "payment-engine/internal/domain/adaptors/repositories"
+
 	gopostgres "github.com/HADLakmal/go-postgres"
 	"github.com/recodextech/api-definitions/events"
 	"github.com/recodextech/container"
@@ -23,12 +25,16 @@ type PaymentRepository struct {
 	dbAdaptor database.FixFlowDB
 	log       adaptors.Logger
 	gopostgres.DatabaseReporter
+	jobRepo    repo.JobRepository
+	walletRepo repo.AccountWalletRepository
 }
 
 func (r *PaymentRepository) Init(c container.Container) error {
 	r.dbAdaptor = c.Resolve(application.MoudleDBConector).(database.FixFlowDB)
 	r.log = c.Resolve(application.ModuleLogger).(adaptors.Logger).NewLog(adaptors.LoggerPrefixed(`repo.payment`))
 	r.DatabaseReporter = c.Resolve(application.ModuleSQL).(gopostgres.DatabaseReporter)
+	r.jobRepo = c.Resolve(application.ModuleJobRepo).(repo.JobRepository)
+	r.walletRepo = c.Resolve(application.ModuleAccountWalletRepo).(repo.AccountWalletRepository)
 	return nil
 }
 
@@ -136,37 +142,57 @@ func (r *PaymentRepository) UpdatePayment(ctx context.Context, payment events.Pa
 }
 
 // UpdatePayment updates an existing payment record
-func (r *PaymentRepository) UpdateInProgressPaymentToCancelled(ctx context.Context, key string) error {
+func (r *PaymentRepository) UpdateInProgressPaymentToCancelled(ctx context.Context, key, jobID string) error {
 	err := r.DatabaseReporter.InTransaction(ctx, func(ctx context.Context) error {
+		job, err := r.jobRepo.GetJobByID(ctx, jobID)
+		if err != nil {
+			return errors.Wrap(err, "failed to get job by ID")
+		}
+
 		payment, errPayment := r.GetPaymentByID(ctx, key)
 		if errPayment != nil {
 			return errors.Wrap(errPayment, "failed to get payment by ID")
 		}
 
-		if payment.Payload.Status != domain.PaymentPending.String() {
+		paymentCancellation := func(paymentInput events.PaymentEvent) error {
+			if paymentInput.Payload.Status != domain.PaymentPending.String() {
+				return errors.New("only in-progress payments can be cancelled")
+			}
+			paymentInput.Payload.Status = domain.PaymentCancelled.String()
+			payloadJSON, err := json.Marshal(paymentInput.Payload)
+			if err != nil {
+				return errors.Wrap(err, "failed to marshal payload")
+			}
+			paymentInput.EventMeta = events.MetaUpdate(ctx, paymentInput.EventMeta)
+			metaJSON, err := json.Marshal(paymentInput.EventMeta)
+			if err != nil {
+				return errors.Wrap(err, "failed to marshal meta")
+			}
+			processUpdates := map[string]interface{}{
+				columnParamStatus:    domain.PaymentCancelled.String(),
+				columnParamUpdatedAt: "NOW()",
+				columnParamPayload:   string(payloadJSON),
+				columnParamMeta:      string(metaJSON),
+			}
+			err = r.dbAdaptor.UpdateDataRow(ctx, domain.PaymentTable, key, processUpdates)
+			if err != nil {
+				return errors.Wrap(err, "failed to update process status")
+			}
+			return nil
+		}
+
+		switch job.JobStatus {
+		case domain.JobAccepted.String(), domain.JobStarted.String():
+			err = paymentCancellation(payment)
+			if err != nil {
+				return errors.Wrap(err, "failed to cancel payment")
+			}
+			return nil
+		case domain.JobEnded.String():
+			return errors.New(`job already in ended state`)
+		default:
 			return errors.New("only in-progress payments can be cancelled")
 		}
-		payment.Payload.Status = domain.PaymentCancelled.String()
-		payloadJSON, err := json.Marshal(payment.Payload)
-		if err != nil {
-			return errors.Wrap(err, "failed to marshal payload")
-		}
-		payment.EventMeta = events.MetaUpdate(ctx, payment.EventMeta)
-		metaJSON, err := json.Marshal(payment.EventMeta)
-		if err != nil {
-			return errors.Wrap(err, "failed to marshal meta")
-		}
-		processUpdates := map[string]interface{}{
-			columnParamStatus:    domain.PaymentCancelled.String(),
-			columnParamUpdatedAt: "NOW()",
-			columnParamPayload:   string(payloadJSON),
-			columnParamMeta:      string(metaJSON),
-		}
-		err = r.dbAdaptor.UpdateDataRow(ctx, domain.PaymentTable, key, processUpdates)
-		if err != nil {
-			return errors.Wrap(err, "failed to update process status")
-		}
-		return nil
 	}, nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to update in progress payment to cancelled")
@@ -208,6 +234,11 @@ func (r *PaymentRepository) UpdateInProgressPaymentToSuccess(ctx context.Context
 			_, err = r.createTransaction(ctx, transac, payment.EventMeta)
 			if err != nil {
 				return errors.Wrap(err, "failed to create transaction for successful payment")
+			}
+			// Update wallet balance for each transaction
+			err = r.walletRepo.UpdateWalletBalance(ctx, transac.Payee.ID, transac.Amount)
+			if err != nil {
+				return errors.Wrap(err, "failed to update wallet balance")
 			}
 		}
 		return nil

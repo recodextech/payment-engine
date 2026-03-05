@@ -91,23 +91,9 @@ func (s *PaymentService) GetPayment(ctx context.Context, paymentID string) (paym
 	return payment, nil
 }
 
-// UpdatePayment updates an existing payment
-func (s *PaymentService) UpdatePayment(ctx context.Context, payment events.PaymentEvent) error {
-	if payment.Payload.ID == "" {
-		return errors.New("payment_id is required")
-	}
-
-	err := s.paymentRepo.UpdatePayment(ctx, payment)
-	if err != nil {
-		return errors.Wrap(err, "failed to update payment")
-	}
-
-	return nil
-}
-
 // CancelPayment cancels an in-progress payment
 func (s *PaymentService) CancelPayment(ctx context.Context, req request.CancelPaymentRequest) error {
-	err := s.paymentRepo.UpdateInProgressPaymentToCancelled(ctx, req.PaymentID)
+	err := s.paymentRepo.UpdateInProgressPaymentToCancelled(ctx, req.PaymentID, req.JobID)
 	if err != nil {
 		return errors.Wrap(err, "failed to cancel payment")
 	}

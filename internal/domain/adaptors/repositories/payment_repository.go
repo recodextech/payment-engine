@@ -10,8 +10,7 @@ import (
 type PaymentRepository interface {
 	CreatePayment(ctx context.Context, payment events.PaymentEvent) (string, error)
 	GetPaymentByID(ctx context.Context, paymentID string) (events.PaymentEvent, error)
-	UpdatePayment(ctx context.Context, payment events.PaymentEvent) error
-	UpdateInProgressPaymentToCancelled(ctx context.Context, key string) error
+	UpdateInProgressPaymentToCancelled(ctx context.Context, key, jobID string) error
 	UpdateInProgressPaymentToSuccess(ctx context.Context, key string) error
 	Exists(ctx context.Context, paymentID string) (exists bool, err error)
 }

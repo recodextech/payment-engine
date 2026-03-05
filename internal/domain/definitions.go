@@ -65,3 +65,17 @@ const (
 	WalletPoints WalletType = "POINTS"
 	WalletCredit WalletType = "CREDIT"
 )
+
+// job status
+type JobStatus string
+
+func (j JobStatus) String() string {
+	return string(j)
+}
+
+const (
+	JobAccepted  JobStatus = `ACCEPTED`
+	JobStarted   JobStatus = `STARTED`
+	JobCancelled JobStatus = `CANCELLED`
+	JobEnded     JobStatus = `ENDED`
+)
