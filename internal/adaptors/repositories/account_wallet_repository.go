@@ -224,6 +224,7 @@ func (r *AccountWalletRepository) UpdateWalletBalance(ctx context.Context, walle
 	}
 
 	walletRes.Payload.Balance = balance
+	walletRes.Payload.SequenceNumber += 1
 	walletRes.EventMeta = events.MetaUpdate(ctx, walletRes.EventMeta)
 
 	metaJSON, err := json.Marshal(walletRes.EventMeta)

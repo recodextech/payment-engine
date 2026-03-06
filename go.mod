@@ -9,7 +9,7 @@ require (
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.8.1
 	github.com/prometheus/client_golang v1.20.0
-	github.com/recodextech/api-definitions v0.0.0-20260221045827-bd48d6710278
+	github.com/recodextech/api-definitions v0.0.0-20260306111845-9a6395c7cc9f
 	github.com/recodextech/container v1.0.1
 	github.com/recodextech/krouter v0.1.0
 	github.com/tryfix/log v1.2.1

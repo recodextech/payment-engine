@@ -149,6 +149,8 @@ github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 h1:MkV+77GLUNo
 github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/recodextech/api-definitions v0.0.0-20260221045827-bd48d6710278 h1:5mOsLP+J4dpFKvdP/E61UwmHpZR3G20rdr0R9HOzyQ4=
 github.com/recodextech/api-definitions v0.0.0-20260221045827-bd48d6710278/go.mod h1:xy4WiFg9UoTwUcCYwuuXSYxqEVxUbPflrod6FjGUL6g=
+github.com/recodextech/api-definitions v0.0.0-20260306111845-9a6395c7cc9f h1:hldvgQMpsL8S07mUfLr9yok+mnV6tjP7CWk/Pf4hUyY=
+github.com/recodextech/api-definitions v0.0.0-20260306111845-9a6395c7cc9f/go.mod h1:xy4WiFg9UoTwUcCYwuuXSYxqEVxUbPflrod6FjGUL6g=
 github.com/recodextech/container v1.0.1 h1:F3yi1SNEDFEJKwUKVmmV4XoYGRNZGLw9z2Apbt5ofZM=
 github.com/recodextech/container v1.0.1/go.mod h1:XSb5gDqrIuiHC1Gn5N1rn+SKvbSm3xHaZxIa5s0agfs=
 github.com/recodextech/krouter v0.1.0 h1:6fk5GDP+mxoH7OfQ05jllT2PmIczqjw9uloC8okK0Xg=

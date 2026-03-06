@@ -221,16 +221,23 @@ func (r *PaymentRepository) UpdateInProgressPaymentToSuccess(ctx context.Context
 			return errors.Wrap(err, "failed to marshal meta")
 		}
 		processUpdates := map[string]interface{}{
-			columnParamStatus:    domain.PaymentSuccess.String(),
-			columnParamUpdatedAt: "NOW()",
-			columnParamPayload:   string(payloadJSON),
-			columnParamMeta:      string(metaJSON),
+			columnParamStatus:  domain.PaymentSuccess.String(),
+			columnParamPayload: string(payloadJSON),
+			columnParamMeta:    string(metaJSON),
 		}
 		err = r.dbAdaptor.UpdateDataRow(ctx, domain.PaymentTable, key, processUpdates)
 		if err != nil {
 			return errors.Wrap(err, "failed to update process status")
 		}
 		for _, transac := range payment.Payload.TransactionEntries {
+			wallet, err := r.walletRepo.GetWalletByID(ctx, transac.Payee.ID)
+			if err != nil {
+				return errors.Wrap(err, "failed to get wallet by ID")
+			}
+			transac.PaymentID = payment.Payload.ID
+			transac.Payee.SequenceNumber = wallet.Payload.SequenceNumber
+			transac.Payee.CurrentBalance = wallet.Payload.Balance + transac.Amount
+			transac.Type = wallet.Payload.Type
 			_, err = r.createTransaction(ctx, transac, payment.EventMeta)
 			if err != nil {
 				return errors.Wrap(err, "failed to create transaction for successful payment")
