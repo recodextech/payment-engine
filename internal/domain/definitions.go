@@ -63,7 +63,7 @@ func (w WalletType) String() string {
 const (
 	WalletCash   WalletType = "CASH"
 	WalletPoints WalletType = "POINTS"
-	WalletCredit WalletType = "CREDIT"
+	WalletCard   WalletType = "CARD"
 )
 
 // job status
