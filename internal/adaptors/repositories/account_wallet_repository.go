@@ -129,6 +129,48 @@ func (r *AccountWalletRepository) GetWalletByID(ctx context.Context, walletID st
 	return walletRes, nil
 }
 
+// GetWalletByIDForUpdate retrieves a wallet by ID with a pessimistic row lock
+// (SELECT ... FOR UPDATE).  It must be called inside an InTransaction callback.
+func (r *AccountWalletRepository) GetWalletByIDForUpdate(ctx context.Context, walletID string) (walletRes events.AccountWalletEvent, err error) {
+	columns := []string{columnParamAccountID, columnParamType, columnParamMeta, columnParamPayload, columnParamBalance}
+	whereClause := `key = $1 AND deleted = false`
+
+	result, err := r.dbAdaptor.GetDataRowWithResultForUpdate(ctx, domain.AccountWalletTable, columns, whereClause, []interface{}{walletID})
+	if err != nil {
+		return walletRes, errors.Wrap(err, "failed to lock wallet row")
+	}
+	var walletPayloadBytes, walletMeta []byte
+	var accountID, walletType string
+	var walletBalance float64
+
+	exist, err := result.Scan(
+		&accountID,
+		&walletType,
+		&walletMeta,
+		&walletPayloadBytes,
+		&walletBalance)
+	if err != nil {
+		return walletRes, errors.Wrap(err, "failed to scan wallet row")
+	}
+	if !exist {
+		return walletRes, errors.New("wallet not found")
+	}
+	err = json.Unmarshal(walletPayloadBytes, &walletRes.Payload)
+	if err != nil {
+		return walletRes, errors.Wrap(err, "failed to unmarshal wallet payload")
+	}
+	err = json.Unmarshal(walletMeta, &walletRes.EventMeta)
+	if err != nil {
+		return walletRes, errors.Wrap(err, "failed to unmarshal wallet meta")
+	}
+
+	walletRes.Payload.AccountID = accountID
+	walletRes.Payload.Type = walletType
+	walletRes.Payload.Balance = walletBalance
+
+	return walletRes, nil
+}
+
 // GetWalletByAccountID retrieves wallet(s) for an account
 func (r *AccountWalletRepository) GetWalletsByAccountID(ctx context.Context, accountID string) (walletRes []events.AccountWalletEvent, exist bool, err error) {
 	columns := []string{columnParamAccountID, columnParamType, columnParamMeta, columnParamPayload, columnParamBalance}
@@ -216,11 +258,13 @@ func (r *AccountWalletRepository) GetWalletByType(ctx context.Context, accountID
 	return walletRes, true, nil
 }
 
-// UpdateWalletBalance updates the balance of a wallet
+// UpdateWalletBalance updates the balance of a wallet.  The read is done with
+// FOR UPDATE so the row is locked for the duration of the surrounding
+// transaction, preventing concurrent double-spend.
 func (r *AccountWalletRepository) UpdateWalletBalance(ctx context.Context, walletID string, balance float64) error {
-	walletRes, err := r.GetWalletByID(ctx, walletID)
+	walletRes, err := r.GetWalletByIDForUpdate(ctx, walletID)
 	if err != nil {
-		return errors.Wrap(err, "failed to get wallet for balance update")
+		return errors.Wrap(err, "failed to lock wallet for balance update")
 	}
 
 	walletRes.Payload.Balance = balance

@@ -66,6 +66,27 @@ const (
 	WalletCard   WalletType = "CARD"
 )
 
+// ReasonCode classifies why an inter-account value transfer is occurring.
+// Every payment must carry one of these codes so auditing is always possible.
+type ReasonCode string
+
+func (r ReasonCode) String() string {
+	return string(r)
+}
+
+const (
+	// ReasonJobCompleted is the standard payout from contractor to worker after
+	// a job finishes.
+	ReasonJobCompleted ReasonCode = "JOB_COMPLETED"
+	// ReasonFeeDeduction covers platform or service fees taken from a wallet.
+	ReasonFeeDeduction ReasonCode = "FEE_DEDUCTION"
+	// ReasonRefund reverses a prior payment back to the originating wallet.
+	ReasonRefund ReasonCode = "REFUND"
+	// ReasonPointsRedemption is the only authorised path for converting Points
+	// wallet value into a payout — must go through the dedicated redemption service.
+	ReasonPointsRedemption ReasonCode = "POINTS_REDEMPTION"
+)
+
 // job status
 type JobStatus string
 

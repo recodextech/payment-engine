@@ -214,3 +214,27 @@ func (d *DBConnector) UpdateDataRow(ctx context.Context, table string, key strin
 
 	return nil
 }
+
+// GetDataRowWithResultForUpdate executes a SELECT ... FOR UPDATE within the
+// current transaction, exclusively locking the matched row until the transaction
+// commits or rolls back.  It must be called inside an InTransaction callback.
+func (d *DBConnector) GetDataRowWithResultForUpdate(ctx context.Context, table string, columns []string, whereClause string, args []any) (gopostgres.RowInterface, error) {
+	var columnValues string
+	for index, cl := range columns {
+		columnValues += cl
+		if index != len(columns)-1 {
+			columnValues += `, `
+		}
+	}
+
+	query := fmt.Sprintf(`SELECT %s FROM %s WHERE %s FOR UPDATE`, columnValues, table, whereClause)
+	statement, err := d.DatabaseReporter.Prepare(ctx, query)
+	if err != nil {
+		return nil, errors.Wrap(err, table+` : for-update query failed`)
+	}
+	row, err := statement.QueryRowContext(ctx, args...)
+	if err != nil {
+		return nil, errors.Wrap(err, `for-update execution failed`)
+	}
+	return row, nil
+}

@@ -31,6 +31,9 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req request.CreatePa
 	if req.Amount <= 0 {
 		return "", errors.New("amount must be greater than 0")
 	}
+	if req.JobID == "" {
+		return "", errors.New("job_id is required: every payment must be tied to a job")
+	}
 
 	// Convert request transaction entries to domain model
 	transactionEntries := make([]events.TransactionPayload, 0, len(req.TransactionEntries))

@@ -230,9 +230,11 @@ func (r *PaymentRepository) UpdateInProgressPaymentToSuccess(ctx context.Context
 			return errors.Wrap(err, "failed to update process status")
 		}
 		for _, transac := range payment.Payload.TransactionEntries {
-			wallet, err := r.walletRepo.GetWalletByID(ctx, transac.Payee.ID)
+			// Lock the wallet row before reading balance to prevent concurrent
+			// requests from reading the same stale balance (double-spend).
+			wallet, err := r.walletRepo.GetWalletByIDForUpdate(ctx, transac.Payee.ID)
 			if err != nil {
-				return errors.Wrap(err, "failed to get wallet by ID")
+				return errors.Wrap(err, "failed to lock wallet by ID")
 			}
 			transac.PaymentID = payment.Payload.ID
 			transac.Payee.SequenceNumber = wallet.Payload.SequenceNumber
@@ -243,7 +245,7 @@ func (r *PaymentRepository) UpdateInProgressPaymentToSuccess(ctx context.Context
 				return errors.Wrap(err, "failed to create transaction for successful payment")
 			}
 			// Update wallet balance for each transaction
-			err = r.walletRepo.UpdateWalletBalance(ctx, transac.Payee.ID, transac.Amount)
+			err = r.walletRepo.UpdateWalletBalance(ctx, transac.Payee.ID, transac.Payee.CurrentBalance)
 			if err != nil {
 				return errors.Wrap(err, "failed to update wallet balance")
 			}
