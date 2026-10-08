@@ -3,7 +3,7 @@ module payment-engine
 go 1.25.5
 
 require (
-	github.com/HADLakmal/go-postgres v1.0.1-dev
+	github.com/HADLakmal/go-postgres v1.2.0
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.4.2
