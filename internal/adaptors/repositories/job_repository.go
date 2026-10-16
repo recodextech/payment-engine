@@ -36,7 +36,7 @@ func (r *JobRepository) Exists(ctx context.Context, jobID string) (bool, error) 
 
 // GetJobByID retrieves a job by its ID
 func (r *JobRepository) GetJobByID(ctx context.Context, jobID string) (events.JobPayload, error) {
-	columns := []string{columnParamPayload}
+	columns := []string{columnParamStatus, columnParamPayload}
 	whereClause := `key = $1 AND deleted = false`
 
 	result, err := r.dbAdaptor.GetDataRowWithResult(ctx, domain.JobTable, columns, whereClause, []interface{}{jobID})
@@ -44,8 +44,10 @@ func (r *JobRepository) GetJobByID(ctx context.Context, jobID string) (events.Jo
 		return events.JobPayload{}, errors.Wrap(err, "failed to get job by ID")
 	}
 
+	var jobStatus string
 	var jobPayloadBytes []byte
 	exist, err := result.Scan(
+		&jobStatus,
 		&jobPayloadBytes)
 	if err != nil {
 		return events.JobPayload{}, errors.Wrap(err, "failed to scan job row")
@@ -58,6 +60,8 @@ func (r *JobRepository) GetJobByID(ctx context.Context, jobID string) (events.Jo
 	if err != nil {
 		return events.JobPayload{}, errors.Wrap(err, "failed to unmarshal job payload")
 	}
+	// the status column is the source of truth; the payload keeps the status the job was created with
+	jobRes.JobStatus = jobStatus
 
 	return jobRes, nil
 }
