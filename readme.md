@@ -1,5 +1,7 @@
 # Skeleton Project
 
+How payments, transactions and wallet balances work: [docs/payment-flow.md](docs/payment-flow.md)
+
 ## Docker Setup Kafka
 
 ### Docker compose file

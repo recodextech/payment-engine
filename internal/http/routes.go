@@ -97,4 +97,17 @@ func initRoutes(r *Router, c container.Container) {
 			krouter.HandlerWithValidator(c.Resolve(validator.ModuleAccountIDValidator).(krouter.Validator)),
 			krouter.HandlerWithSuccessHandlerFunc(c.Resolve(writers.ModuleGetWalletsWriter).(responses.GenerateResponse).Response),
 		)).Methods(http.MethodGet)
+
+	// Wallet ledger entries, newest first
+	r.router.Handle(fmt.Sprintf("/wallets/{%s}/transactions", request.PathParamWalletID.String()),
+		r.krouter.NewHandler(
+			handlers.ModuleGetWalletTransactions,
+			request.NoOp{},
+			c.Resolve(handlers.ModuleGetWalletTransactions).(*handlers.GetWalletTransactionsHandler).Handle,
+			krouter.HandlerWithParameter(request.PathParamWalletID.String(), request.ParamTypeAppUUID),
+			krouter.HandlerWithHeader(request.HeaderAccountID.String(), request.ParamTypeAppUUID, nil),
+			krouter.HandlerWithHeader(request.HeaderTraceID.String(), request.ParamTypeAppUUID, traceIDGenerate),
+			krouter.HandlerWithValidator(c.Resolve(validator.ModuleAccountIDValidator).(krouter.Validator)),
+			krouter.HandlerWithSuccessHandlerFunc(c.Resolve(writers.ModuleWalletTransactionsWriter).(responses.GenerateResponse).Response),
+		)).Methods(http.MethodGet)
 }

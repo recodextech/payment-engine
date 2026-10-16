@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"payment-engine/internal/domain"
+	"payment-engine/internal/domain/models"
 
 	"github.com/recodextech/api-definitions/events"
 )
@@ -19,4 +20,6 @@ type AccountWalletRepository interface {
 	GetWalletsByAccountID(ctx context.Context, accountID string) (walletRes []events.AccountWalletEvent, exist bool, err error)
 	GetWalletByType(ctx context.Context, accountID string, walletType domain.WalletType) (walletRes events.AccountWalletEvent, exist bool, err error)
 	UpdateWalletBalance(ctx context.Context, walletID string, balance float64) error
+	GetWalletTotals(ctx context.Context, walletID string) (models.WalletTotals, error)
+	GetWalletTransactions(ctx context.Context, walletID string, limit int) ([]models.WalletTransaction, error)
 }

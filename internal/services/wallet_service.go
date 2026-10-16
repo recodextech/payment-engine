@@ -6,6 +6,7 @@ import (
 	"payment-engine/internal/domain"
 	"payment-engine/internal/domain/adaptors/repositories"
 	"payment-engine/internal/domain/application"
+	"payment-engine/internal/domain/models"
 	"payment-engine/internal/http/request"
 	"payment-engine/pkg/errors"
 
@@ -99,4 +100,32 @@ func (s *WalletService) GetWallets(ctx context.Context, accountID string) ([]eve
 		return []events.AccountWalletEvent{}, errors.New(`No wallet exists`)
 	}
 	return wallets, nil
+}
+
+// GetWalletTotals returns how much was credited to and debited from the wallet
+func (s *WalletService) GetWalletTotals(ctx context.Context, walletID string) (models.WalletTotals, error) {
+	totals, err := s.accountWalletRepo.GetWalletTotals(ctx, walletID)
+	if err != nil {
+		return models.WalletTotals{}, errors.Wrap(err, "failed to get wallet totals")
+	}
+	return totals, nil
+}
+
+// walletTransactionsLimit caps how many ledger entries one request returns
+const walletTransactionsLimit = 100
+
+// GetWalletTransactions returns the latest ledger entries of a wallet owned by the account
+func (s *WalletService) GetWalletTransactions(ctx context.Context, accountID, walletID string) ([]models.WalletTransaction, error) {
+	wallet, err := s.accountWalletRepo.GetWalletByID(ctx, walletID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get wallet")
+	}
+	if wallet.Payload.AccountID != accountID {
+		return nil, errors.New("wallet does not belong to the account")
+	}
+	transactions, err := s.accountWalletRepo.GetWalletTransactions(ctx, walletID, walletTransactionsLimit)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get wallet transactions")
+	}
+	return transactions, nil
 }

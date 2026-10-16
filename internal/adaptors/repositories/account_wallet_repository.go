@@ -8,6 +8,7 @@ import (
 	"payment-engine/internal/domain/adaptors"
 	"payment-engine/internal/domain/adaptors/database"
 	"payment-engine/internal/domain/application"
+	"payment-engine/internal/domain/models"
 	"payment-engine/pkg/errors"
 
 	gopostgres "github.com/HADLakmal/go-postgres"
@@ -291,4 +292,81 @@ func (r *AccountWalletRepository) UpdateWalletBalance(ctx context.Context, walle
 	}
 
 	return nil
+}
+
+// GetWalletTotals sums the wallet's ledger entries: credits (amount > 0) and
+// debits (amount < 0, returned as a positive number).
+func (r *AccountWalletRepository) GetWalletTotals(ctx context.Context, walletID string) (models.WalletTotals, error) {
+	columns := []string{
+		`COALESCE(SUM(amount) FILTER (WHERE amount > 0), 0)`,
+		`COALESCE(-SUM(amount) FILTER (WHERE amount < 0), 0)`,
+	}
+	whereClause := `payee_id = $1 AND deleted = false`
+
+	result, err := r.dbAdaptor.GetDataRowWithResult(ctx, domain.TransactionTable, columns, whereClause, []interface{}{walletID})
+	if err != nil {
+		return models.WalletTotals{}, errors.Wrap(err, "failed to get wallet totals")
+	}
+
+	var totals models.WalletTotals
+	if _, err = result.Scan(&totals.Credited, &totals.Debited); err != nil {
+		return models.WalletTotals{}, errors.Wrap(err, "failed to scan wallet totals")
+	}
+
+	totals.Held, err = r.getWalletHeld(ctx, walletID)
+	if err != nil {
+		return models.WalletTotals{}, err
+	}
+	return totals, nil
+}
+
+// getWalletHeld sums the debit entries of the wallet's in-progress payments:
+// the amount on hold until those jobs complete or are cancelled.
+func (r *AccountWalletRepository) getWalletHeld(ctx context.Context, walletID string) (float64, error) {
+	table := domain.PaymentTable + ` p CROSS JOIN LATERAL jsonb_array_elements(p.payload::jsonb->'transaction_entries') e`
+	columns := []string{`COALESCE(-SUM((e->>'amount')::float8), 0)`}
+	whereClause := `p.status = $1 AND p.deleted = false AND e->'payee'->>'id' = $2 AND (e->>'amount')::float8 < 0`
+
+	result, err := r.dbAdaptor.GetDataRowWithResult(ctx, table, columns, whereClause,
+		[]any{domain.PaymentPending.String(), walletID})
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get wallet held amount")
+	}
+
+	var held float64
+	if _, err = result.Scan(&held); err != nil {
+		return 0, errors.Wrap(err, "failed to scan wallet held amount")
+	}
+	return held, nil
+}
+
+// GetWalletTransactions returns the wallet's latest ledger entries, newest first.
+func (r *AccountWalletRepository) GetWalletTransactions(ctx context.Context, walletID string, limit int) ([]models.WalletTransaction, error) {
+	table := domain.TransactionTable + ` t JOIN ` + domain.PaymentTable + ` p ON p.key = t.payment_id`
+	columns := []string{
+		`t.key`,
+		`t.payment_id`,
+		`COALESCE(p.job_id::text, '')`,
+		`t.type`,
+		`t.amount`,
+		`COALESCE((t.payload->'payee'->>'current_balance')::float8, 0)`,
+		`t.created_at`,
+	}
+	whereClause := `t.payee_id = $1 AND t.deleted = false ORDER BY t.created_at DESC LIMIT $2`
+
+	rows, err := r.dbAdaptor.GetDataRowsWithResult(ctx, table, columns, whereClause, []interface{}{walletID, limit})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get wallet transactions")
+	}
+	defer rows.Close()
+
+	transactions := make([]models.WalletTransaction, 0)
+	for rows.Next() {
+		var t models.WalletTransaction
+		if err := rows.Scan(&t.ID, &t.PaymentID, &t.JobID, &t.WalletType, &t.Amount, &t.BalanceAfter, &t.CreatedAt); err != nil {
+			return nil, errors.Wrap(err, "failed to scan wallet transaction")
+		}
+		transactions = append(transactions, t)
+	}
+	return transactions, nil
 }

@@ -2,19 +2,24 @@ package request
 
 import "encoding/json"
 
-// TransactionEntry represents a single transaction entry
+// TransactionEntry represents a single credit to a payee wallet
 type TransactionEntry struct {
-	Amount  float64 `json:"amount" validate:"required,gt=0"`
-	PayeeID string  `json:"payee_id" validate:"required"`
+	Amount float64 `json:"amount" validate:"required,gt=0"`
+	// PayeeID is the wallet to credit. When empty, the wallet of PayeeAccountID
+	// with the same type as the payer wallet is credited.
+	PayeeID        string `json:"payee_id"`
+	PayeeAccountID string `json:"payee_account_id"`
 	// WalletType restricts which wallet type the credit is allowed to land in.
 	// Accepted values match domain.WalletType: CASH, POINTS, CARD.
-	WalletType string `json:"wallet_type" validate:"required,oneof=CASH POINTS CARD"`
+	WalletType string `json:"wallet_type" validate:"omitempty,oneof=CASH POINTS CARD"`
 }
 
 // CreatePaymentRequest represents the payment creation request
 type CreatePaymentRequest struct {
-	Amount             float64            `json:"amount" validate:"required,gt=0"`
-	Type               string             `json:"type" validate:"required,oneof=PAYMENT REFUND"`
+	Amount float64 `json:"amount" validate:"required,gt=0"`
+	Type   string  `json:"type" validate:"required,oneof=PAYMENT REFUND"`
+	// PayerID is the wallet debited by Amount when the payment succeeds.
+	PayerID            string             `json:"payer_id" validate:"required"`
 	TransactionEntries []TransactionEntry `json:"transaction_entries" validate:"required,min=1"`
 	PaymentInfromation struct {
 		Method    string            `json:"method"`

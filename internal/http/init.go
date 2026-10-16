@@ -24,6 +24,7 @@ func (h *HTTP) Init(c container.Container) error {
 	c.Bind(handlers.ModuleSuccessPayment, new(handlers.SuccessPaymentHandler))
 	c.Bind(handlers.ModuleCreateWallet, new(handlers.CreateWalletHandler))
 	c.Bind(handlers.ModuleGetWallets, new(handlers.GetWalletsHandler))
+	c.Bind(handlers.ModuleGetWalletTransactions, new(handlers.GetWalletTransactionsHandler))
 
 	// Http error handler
 	c.Bind(handlers.ModuleErrorHandler, new(handlers.ErrorHandler))
@@ -35,6 +36,7 @@ func (h *HTTP) Init(c container.Container) error {
 	c.Bind(writers.ModuleWalletWriter, new(writers.WalletWriter))
 	c.Bind(writers.ModuleInternalWalletWriter, new(writers.WalletsInternalWriter))
 	c.Bind(writers.ModuleGetWalletsWriter, new(writers.GetWalletsWriter))
+	c.Bind(writers.ModuleWalletTransactionsWriter, new(writers.WalletTransactionsWriter))
 
 	c.Bind(application.ModuleHTTPRouter, new(Router))
 	c.Bind(application.ModuleHTTPServer, new(Server))
@@ -51,6 +53,7 @@ func (h *HTTP) Init(c container.Container) error {
 		handlers.ModuleSuccessPayment,
 		handlers.ModuleCreateWallet,
 		handlers.ModuleGetWallets,
+		handlers.ModuleGetWalletTransactions,
 
 		// Http error handler
 		handlers.ModuleErrorHandler,
@@ -61,6 +64,7 @@ func (h *HTTP) Init(c container.Container) error {
 		writers.ModuleWalletWriter,
 		writers.ModuleInternalWalletWriter,
 		writers.ModuleGetWalletsWriter,
+		writers.ModuleWalletTransactionsWriter,
 		writers.ModuleNoContentWriter,
 
 		// Http Server Init

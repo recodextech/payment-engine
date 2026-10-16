@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"encoding/json"
+	"sort"
 
 	"payment-engine/internal/domain"
 	"payment-engine/internal/domain/adaptors"
@@ -38,13 +39,58 @@ func (r *PaymentRepository) Init(c container.Container) error {
 	return nil
 }
 
-// CreatePayment creates a new payment record and returns the payment ID
+// CreatePayment places an in-progress payment in one transaction. The pending
+// payment is the hold on its amount: wallet balances move only when it
+// succeeds, and cancelling it releases the hold. Every wallet row is locked
+// first, so parallel payments on the same wallets run one after another and
+// each entry snapshots the wallet balance the previous payment left behind.
 func (r *PaymentRepository) CreatePayment(ctx context.Context, payment events.PaymentEvent) (string, error) {
-	paymentID, err := r.createPaymentChange(ctx, payment)
+	var paymentID string
+	err := r.DatabaseReporter.InTransaction(ctx, func(ctx context.Context) error {
+		wallets, err := r.lockWallets(ctx, payment.Payload.TransactionEntries)
+		if err != nil {
+			return err
+		}
+		for i, transac := range payment.Payload.TransactionEntries {
+			wallet := wallets[transac.Payee.ID]
+			payment.Payload.TransactionEntries[i].Payee.CurrentBalance = wallet.Payload.Balance
+			payment.Payload.TransactionEntries[i].Payee.SequenceNumber = wallet.Payload.SequenceNumber
+		}
+		paymentID, err = r.createPaymentChange(ctx, payment)
+		if err != nil {
+			return errors.Wrap(err, "failed to create payment change")
+		}
+		return nil
+	}, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to create payment change")
+		return "", errors.Wrap(err, "failed to create payment")
 	}
 	return paymentID, nil
+}
+
+// lockWallets locks the wallet row of every entry (SELECT ... FOR UPDATE) and
+// returns the locked wallets keyed by ID. Locks are taken in wallet ID order so
+// two payments between the same wallets cannot deadlock. Must be called inside
+// an InTransaction callback.
+func (r *PaymentRepository) lockWallets(ctx context.Context,
+	entries []events.TransactionPayload) (map[string]events.AccountWalletEvent, error) {
+	walletIDs := make([]string, 0, len(entries))
+	for _, transac := range entries {
+		walletIDs = append(walletIDs, transac.Payee.ID)
+	}
+	sort.Strings(walletIDs)
+	wallets := make(map[string]events.AccountWalletEvent, len(walletIDs))
+	for _, walletID := range walletIDs {
+		if _, locked := wallets[walletID]; locked {
+			continue
+		}
+		wallet, err := r.walletRepo.GetWalletByIDForUpdate(ctx, walletID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to lock wallet by ID")
+		}
+		wallets[walletID] = wallet
+	}
+	return wallets, nil
 }
 
 func (r *PaymentRepository) createPaymentChange(ctx context.Context, payment events.PaymentEvent) (workerID string, err error) {
@@ -100,7 +146,24 @@ func (r *PaymentRepository) GetPaymentByID(ctx context.Context, paymentID string
 	if err != nil {
 		return events.PaymentEvent{}, errors.Wrap(err, "failed to get payment")
 	}
+	return scanPayment(result)
+}
 
+// getPaymentByIDForUpdate reads a payment and locks its row until the
+// surrounding transaction ends, so a payment is succeeded or cancelled only
+// once. Must be called inside an InTransaction callback.
+func (r *PaymentRepository) getPaymentByIDForUpdate(ctx context.Context, paymentID string) (events.PaymentEvent, error) {
+	columns := []string{columnParamMeta, columnParamJobID, columnParamType, columnParamAmount, columnParamStatus, columnParamPayload}
+	whereClause := `key = $1 AND deleted = false`
+
+	result, err := r.dbAdaptor.GetDataRowWithResultForUpdate(ctx, domain.PaymentTable, columns, whereClause, []interface{}{paymentID})
+	if err != nil {
+		return events.PaymentEvent{}, errors.Wrap(err, "failed to lock payment")
+	}
+	return scanPayment(result)
+}
+
+func scanPayment(result gopostgres.RowInterface) (events.PaymentEvent, error) {
 	var paymentPayloadBytes, paymentMeta []byte
 	var jobIDVar, typeVar string
 	var amountVar float64
@@ -149,7 +212,8 @@ func (r *PaymentRepository) UpdateInProgressPaymentToCancelled(ctx context.Conte
 			return errors.Wrap(err, "failed to get job by ID")
 		}
 
-		payment, errPayment := r.GetPaymentByID(ctx, key)
+		// Cancelling flips the status, which releases the hold on the amount
+		payment, errPayment := r.getPaymentByIDForUpdate(ctx, key)
 		if errPayment != nil {
 			return errors.Wrap(errPayment, "failed to get payment by ID")
 		}
@@ -203,7 +267,9 @@ func (r *PaymentRepository) UpdateInProgressPaymentToCancelled(ctx context.Conte
 // UpdatePayment updates an existing payment record
 func (r *PaymentRepository) UpdateInProgressPaymentToSuccess(ctx context.Context, key string) error {
 	err := r.DatabaseReporter.InTransaction(ctx, func(ctx context.Context) error {
-		payment, errPayment := r.GetPaymentByID(ctx, key)
+		// The payment row lock stops two concurrent completions from posting
+		// the same entries twice
+		payment, errPayment := r.getPaymentByIDForUpdate(ctx, key)
 		if errPayment != nil {
 			return errors.Wrap(errPayment, "failed to get payment by ID")
 		}
@@ -229,13 +295,16 @@ func (r *PaymentRepository) UpdateInProgressPaymentToSuccess(ctx context.Context
 		if err != nil {
 			return errors.Wrap(err, "failed to update process status")
 		}
+		// Lock every wallet row before reading balances to prevent concurrent
+		// requests from reading the same stale balance (double-spend)
+		wallets, err := r.lockWallets(ctx, payment.Payload.TransactionEntries)
+		if err != nil {
+			return err
+		}
+
+		// Debit entries carry a negative amount, credits a positive one
 		for _, transac := range payment.Payload.TransactionEntries {
-			// Lock the wallet row before reading balance to prevent concurrent
-			// requests from reading the same stale balance (double-spend).
-			wallet, err := r.walletRepo.GetWalletByIDForUpdate(ctx, transac.Payee.ID)
-			if err != nil {
-				return errors.Wrap(err, "failed to lock wallet by ID")
-			}
+			wallet := wallets[transac.Payee.ID]
 			transac.PaymentID = payment.Payload.ID
 			transac.Payee.SequenceNumber = wallet.Payload.SequenceNumber
 			transac.Payee.CurrentBalance = wallet.Payload.Balance + transac.Amount
@@ -244,11 +313,13 @@ func (r *PaymentRepository) UpdateInProgressPaymentToSuccess(ctx context.Context
 			if err != nil {
 				return errors.Wrap(err, "failed to create transaction for successful payment")
 			}
-			// Update wallet balance for each transaction
 			err = r.walletRepo.UpdateWalletBalance(ctx, transac.Payee.ID, transac.Payee.CurrentBalance)
 			if err != nil {
 				return errors.Wrap(err, "failed to update wallet balance")
 			}
+			wallet.Payload.Balance = transac.Payee.CurrentBalance
+			wallet.Payload.SequenceNumber++
+			wallets[transac.Payee.ID] = wallet
 		}
 		return nil
 	}, nil)
