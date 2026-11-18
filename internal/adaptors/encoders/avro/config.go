@@ -2,9 +2,9 @@ package avro
 
 import (
 	"encoding/json"
+	defaultLog "log"
 	"payment-engine/pkg/env"
 	"payment-engine/pkg/errors"
-	defaultLog "log"
 )
 
 type Subjects map[string]int
@@ -12,7 +12,7 @@ type Subjects map[string]int
 func (s *Subjects) UnmarshalText(bytes []byte) error {
 	var subjects map[string]int
 	if err := json.Unmarshal(bytes, &subjects); err != nil {
-		return err
+		return errors.Wrap(err, "failed to unmarshal schema subjects")
 	}
 	*s = subjects
 

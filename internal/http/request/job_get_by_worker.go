@@ -1,6 +1,10 @@
 package request
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"payment-engine/pkg/errors"
+)
 
 type GetJobsByWorker struct {
 	WorkerID  string `json:"worker_id" validate:"required,uuid"`
@@ -14,5 +18,8 @@ func (g GetJobsByWorker) Encode(data interface{}) ([]byte, error) {
 func (g GetJobsByWorker) Decode(data []byte) (interface{}, error) {
 	req := GetJobsByWorker{}
 	err := json.Unmarshal(data, &req)
-	return req, err
+	if err != nil {
+		return req, errors.Wrap(err, "failed to decode get jobs by worker request")
+	}
+	return req, nil
 }

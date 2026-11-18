@@ -62,7 +62,7 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req request.CreatePa
 		}
 		payeeID, payee, err := s.resolvePayeeWallet(ctx, entry, walletType)
 		if err != nil {
-			return "", err
+			return "", errors.Wrap(err, "failed to resolve payee wallet")
 		}
 		if payeeID == req.PayerID {
 			return "", errors.New("payer and payee wallets must be different")

@@ -2,6 +2,7 @@ package db
 
 import (
 	"payment-engine/internal/domain/application"
+	"payment-engine/pkg/errors"
 
 	"github.com/recodextech/container"
 
@@ -26,7 +27,7 @@ func (a *PostgresDB) Init(c container.Container) (err error) {
 	}
 	a.DatabaseReporter, err = gopostgres.NewDBPool(conf)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to create database pool")
 	}
 	return
 }

@@ -2,8 +2,8 @@ package db
 
 import (
 	"fmt"
-	"payment-engine/pkg/env"
 	"log"
+	"payment-engine/pkg/env"
 )
 
 // DatabaseConfig holds db configurations.

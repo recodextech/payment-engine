@@ -43,7 +43,7 @@ func (h *CreatePaymentHandler) Handle(ctx context.Context, payload krouter.HttpP
 	// Call service to create payment
 	paymentID, err := h.paymentService.CreatePayment(ctx, reqBody)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to create payment")
 	}
 
 	// Return response

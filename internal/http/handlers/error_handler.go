@@ -3,11 +3,12 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"payment-engine/internal/app"
 	"payment-engine/internal/domain/adaptors"
 	"payment-engine/internal/domain/application"
 	"payment-engine/internal/http/request"
-	"net/http"
+	"payment-engine/pkg/errors"
 
 	"github.com/recodextech/container"
 )
@@ -40,7 +41,7 @@ func (hlr *ErrorHandler) Handle(ctx context.Context, w http.ResponseWriter, e er
 
 	payload, err := json.Marshal(resError)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to marshal error response")
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -48,7 +49,7 @@ func (hlr *ErrorHandler) Handle(ctx context.Context, w http.ResponseWriter, e er
 
 	_, err = w.Write(payload)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to write error response")
 	}
 
 	return nil

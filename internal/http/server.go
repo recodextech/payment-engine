@@ -3,9 +3,10 @@ package http
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"payment-engine/internal/domain/adaptors"
 	"payment-engine/internal/domain/application"
-	"net/http"
+	"payment-engine/pkg/errors"
 
 	muxhandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -22,7 +23,7 @@ type Server struct {
 func (s *Server) Run() error {
 	s.logger.Info(fmt.Sprintf(`server starting on %s`, s.conf.Host))
 	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		return err
+		return errors.Wrap(err, "http server failed")
 	}
 	return nil
 }

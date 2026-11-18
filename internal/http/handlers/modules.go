@@ -9,4 +9,6 @@ const (
 	ModuleGetWallets            = "http-get-wallets"
 	ModuleGetWalletTransactions = "http-get-wallet-transactions"
 	ModuleErrorHandler          = "http-error-handler"
+
+	ModuleSubscription = "http-subscription"
 )

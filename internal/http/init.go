@@ -17,6 +17,7 @@ func (h *HTTP) Init(c container.Container) error {
 	c.Bind(validator.ModuleAccountIDValidator, new(validator.AccountValidator))
 	c.Bind(validator.ModuleJobIDValidator, new(validator.JobValidator))
 	c.Bind(validator.ModulePaymentIDValidator, new(validator.PaymentValidator))
+	c.Bind(validator.ModuleContractorOwner, new(validator.ContractorOwnerValidator))
 
 	// Http handlers
 	c.Bind(handlers.ModuleCreatePayment, new(handlers.CreatePaymentHandler))
@@ -25,6 +26,7 @@ func (h *HTTP) Init(c container.Container) error {
 	c.Bind(handlers.ModuleCreateWallet, new(handlers.CreateWalletHandler))
 	c.Bind(handlers.ModuleGetWallets, new(handlers.GetWalletsHandler))
 	c.Bind(handlers.ModuleGetWalletTransactions, new(handlers.GetWalletTransactionsHandler))
+	c.Bind(handlers.ModuleSubscription, new(handlers.SubscriptionHandler))
 
 	// Http error handler
 	c.Bind(handlers.ModuleErrorHandler, new(handlers.ErrorHandler))
@@ -37,6 +39,7 @@ func (h *HTTP) Init(c container.Container) error {
 	c.Bind(writers.ModuleInternalWalletWriter, new(writers.WalletsInternalWriter))
 	c.Bind(writers.ModuleGetWalletsWriter, new(writers.GetWalletsWriter))
 	c.Bind(writers.ModuleWalletTransactionsWriter, new(writers.WalletTransactionsWriter))
+	c.Bind(writers.ModuleJSONWriter, new(writers.JSONWriter))
 
 	c.Bind(application.ModuleHTTPRouter, new(Router))
 	c.Bind(application.ModuleHTTPServer, new(Server))
@@ -46,6 +49,7 @@ func (h *HTTP) Init(c container.Container) error {
 		validator.ModuleAccountIDValidator,
 		validator.ModuleJobIDValidator,
 		validator.ModulePaymentIDValidator,
+		validator.ModuleContractorOwner,
 
 		// Http handlers
 		handlers.ModuleCreatePayment,
@@ -54,6 +58,7 @@ func (h *HTTP) Init(c container.Container) error {
 		handlers.ModuleCreateWallet,
 		handlers.ModuleGetWallets,
 		handlers.ModuleGetWalletTransactions,
+		handlers.ModuleSubscription,
 
 		// Http error handler
 		handlers.ModuleErrorHandler,
@@ -66,6 +71,7 @@ func (h *HTTP) Init(c container.Container) error {
 		writers.ModuleGetWalletsWriter,
 		writers.ModuleWalletTransactionsWriter,
 		writers.ModuleNoContentWriter,
+		writers.ModuleJSONWriter,
 
 		// Http Server Init
 		application.ModuleHTTPRouter,

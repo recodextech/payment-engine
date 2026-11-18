@@ -49,7 +49,7 @@ func (r *PaymentRepository) CreatePayment(ctx context.Context, payment events.Pa
 	err := r.DatabaseReporter.InTransaction(ctx, func(ctx context.Context) error {
 		wallets, err := r.lockWallets(ctx, payment.Payload.TransactionEntries)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to lock wallets")
 		}
 		for i, transac := range payment.Payload.TransactionEntries {
 			wallet := wallets[transac.Payee.ID]
@@ -299,7 +299,7 @@ func (r *PaymentRepository) UpdateInProgressPaymentToSuccess(ctx context.Context
 		// requests from reading the same stale balance (double-spend)
 		wallets, err := r.lockWallets(ctx, payment.Payload.TransactionEntries)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to lock wallets")
 		}
 
 		// Debit entries carry a negative amount, credits a positive one

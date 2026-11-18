@@ -1,10 +1,10 @@
 package log
 
 import (
+	defaultLog "log"
 	"payment-engine/internal/domain/adaptors"
 	"payment-engine/pkg/env"
 	"payment-engine/pkg/errors"
-	defaultLog "log"
 )
 
 type LoggerConf struct {

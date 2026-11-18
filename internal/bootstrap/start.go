@@ -1,9 +1,9 @@
 package bootstrap
 
 import (
-	"payment-engine/internal/domain/application"
 	"os"
 	"os/signal"
+	"payment-engine/internal/domain/application"
 
 	"github.com/recodextech/container"
 )

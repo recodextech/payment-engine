@@ -1,9 +1,9 @@
 package metrics
 
 import (
+	"log"
 	"payment-engine/pkg/env"
 	"payment-engine/pkg/errors"
-	"log"
 	"strings"
 	"time"
 )

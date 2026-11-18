@@ -24,10 +24,18 @@ func initModules(c container.Container) {
 		// Adapters
 		application.ModuleSQL,
 		application.MoudleDBConector,
+		application.ModulePlanRepo,
+		application.ModuleSubscriptionRepo,
+		application.ModuleContractorAccountRepo,
+		application.ModuleNotificationClient,
 
 		// Services
 		application.ModulePaymentService,
 		application.ModuleWalletService,
+		application.ModuleSubscriptionNotifier,
+		application.ModuleSubscriptionCore,
+		application.ModuleSubscriptionService,
+		application.ModuleQuotaService,
 
 		// Http
 		application.ModuleHTTP,

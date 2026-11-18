@@ -153,6 +153,10 @@ github.com/recodextech/api-definitions v0.0.0-20260221045827-bd48d6710278 h1:5mO
 github.com/recodextech/api-definitions v0.0.0-20260221045827-bd48d6710278/go.mod h1:xy4WiFg9UoTwUcCYwuuXSYxqEVxUbPflrod6FjGUL6g=
 github.com/recodextech/api-definitions v0.0.0-20260306111845-9a6395c7cc9f h1:hldvgQMpsL8S07mUfLr9yok+mnV6tjP7CWk/Pf4hUyY=
 github.com/recodextech/api-definitions v0.0.0-20260306111845-9a6395c7cc9f/go.mod h1:xy4WiFg9UoTwUcCYwuuXSYxqEVxUbPflrod6FjGUL6g=
+github.com/recodextech/api-definitions v0.0.0-20261115145731-441286b3fc08 h1:p07sJB5jqSwqUwSRxGF800OScGsmLazLzqAM+NsJ7I8=
+github.com/recodextech/api-definitions v0.0.0-20261115145731-441286b3fc08/go.mod h1:xy4WiFg9UoTwUcCYwuuXSYxqEVxUbPflrod6FjGUL6g=
+github.com/recodextech/api-definitions v0.0.0-20261118023645-40de4856c279 h1:Pe/V/75F9hbvE91K7V5TJDb8soZ/VVKBLBdRWMFFuVw=
+github.com/recodextech/api-definitions v0.0.0-20261118023645-40de4856c279/go.mod h1:xy4WiFg9UoTwUcCYwuuXSYxqEVxUbPflrod6FjGUL6g=
 github.com/recodextech/container v1.0.1 h1:F3yi1SNEDFEJKwUKVmmV4XoYGRNZGLw9z2Apbt5ofZM=
 github.com/recodextech/container v1.0.1/go.mod h1:XSb5gDqrIuiHC1Gn5N1rn+SKvbSm3xHaZxIa5s0agfs=
 github.com/recodextech/krouter v0.1.0 h1:6fk5GDP+mxoH7OfQ05jllT2PmIczqjw9uloC8okK0Xg=

@@ -1,6 +1,10 @@
 package request
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"payment-engine/pkg/errors"
+)
 
 // TransactionEntry represents a single credit to a payee wallet
 type TransactionEntry struct {
@@ -39,5 +43,8 @@ func (c CreatePaymentRequest) Encode(data interface{}) ([]byte, error) {
 func (c CreatePaymentRequest) Decode(data []byte) (interface{}, error) {
 	req := CreatePaymentRequest{}
 	err := json.Unmarshal(data, &req)
-	return req, err
+	if err != nil {
+		return req, errors.Wrap(err, "failed to decode create payment request")
+	}
+	return req, nil
 }

@@ -1,8 +1,9 @@
 package http
 
 import (
-	"payment-engine/pkg/env"
 	"log"
+	"payment-engine/pkg/env"
+	"payment-engine/pkg/errors"
 )
 
 type KRouterConf struct {
@@ -15,7 +16,7 @@ type KRouterConf struct {
 func (r *KRouterConf) Register() error {
 	err := env.Parse(r)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to parse router config")
 	}
 	if r.Topic == `` {
 		r.Topic = `services.hailing.payment-engine.request-rerouted.internal`

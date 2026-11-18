@@ -25,3 +25,18 @@ func Msg(code int) string {
 type RepositoryDataNotExistError struct {
 	error
 }
+
+// NotFound returns a RepositoryDataNotExistError that is safe to wrap and print.
+func NotFound(what string) error {
+	return RepositoryDataNotExistError{error: New(what + " not found")}
+}
+
+// RepositoryDuplicateError is returned when a row with the same unique value already exists.
+type RepositoryDuplicateError struct {
+	error
+}
+
+// Duplicate returns a RepositoryDuplicateError that is safe to wrap and print.
+func Duplicate(what string) error {
+	return RepositoryDuplicateError{error: New(what + " already exists")}
+}

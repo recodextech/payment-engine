@@ -3,11 +3,12 @@ package errors
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"payment-engine/internal/app"
 	"payment-engine/internal/domain/adaptors"
 	"payment-engine/internal/domain/application"
 	"payment-engine/internal/http/request"
-	"net/http"
+	perrors "payment-engine/pkg/errors"
 
 	"github.com/recodextech/api-definitions/pkg/uuid"
 	"github.com/recodextech/container"
@@ -41,7 +42,7 @@ func (hlr *Handler) Handle(ctx context.Context, w http.ResponseWriter, e error) 
 
 	payload, err := json.Marshal(resError)
 	if err != nil {
-		return err
+		return perrors.Wrap(err, "failed to marshal error response")
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -49,7 +50,7 @@ func (hlr *Handler) Handle(ctx context.Context, w http.ResponseWriter, e error) 
 
 	_, err = w.Write(payload)
 	if err != nil {
-		return err
+		return perrors.Wrap(err, "failed to write error response")
 	}
 
 	return nil

@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"net/http"
+	"payment-engine/pkg/errors"
 	"strconv"
 
 	"payment-engine/internal/domain/adaptors"
@@ -70,6 +71,7 @@ func (r *Router) Init(c container.Container) error {
 			ctx = context.WithValue(ctx, events.ContextKeyTraceID.String(), traceID.String())
 			// extract custom headers set from the api-gateway
 			ctx = r.applyXHeaders(ctx, req)
+			ctx = context.WithValue(ctx, request.QueryParams.String(), req.URL.Query())
 
 			return ctx
 		}),
@@ -79,7 +81,7 @@ func (r *Router) Init(c container.Container) error {
 		krouter.WithMetricsReporter(c.Resolve(application.ModuleBaseReporter).(metrics.Reporter)),
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to create router")
 	}
 
 	r.router = mux.NewRouter()

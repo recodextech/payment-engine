@@ -315,7 +315,7 @@ func (r *AccountWalletRepository) GetWalletTotals(ctx context.Context, walletID 
 
 	totals.Held, err = r.getWalletHeld(ctx, walletID)
 	if err != nil {
-		return models.WalletTotals{}, err
+		return models.WalletTotals{}, errors.Wrap(err, "failed to get wallet held amount")
 	}
 	return totals, nil
 }

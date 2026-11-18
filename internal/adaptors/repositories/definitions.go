@@ -21,4 +21,19 @@ const (
 	columnParamAccountID = "account_id"
 	columnParamBalance   = "balance"
 	columnParamDeleted   = "deleted"
+
+	// Subscription plan column params
+	columnParamCode      = "code"
+	columnParamKind      = "kind"
+	columnParamDeletedAt = "deleted_at"
+
+	// Subscription column params
+	columnParamContractorID  = "contractor_id"
+	columnParamPlanID        = "plan_id"
+	columnParamPeriodEnd     = "period_end"
+	columnParamRemainingJobs = "remaining_jobs"
+
+	// Subscription payment column params
+	columnParamProvider    = "provider"
+	columnParamProviderRef = "provider_ref"
 )

@@ -11,6 +11,9 @@ const (
 	ModuleSQL             string = "module-sql"
 	MoudleDBConector      string = "module-das-db-connector"
 
+	ModuleHTTPClient    string = "modules.http-client"
+	ModuleBillingConfig string = "modules.billing-config"
+
 	ModuleHTTP           string = "modules.http"
 	ModuleHTTPRouter     string = "modules.router"
 	ModuleHTTPServer     string = "modules.http.server"
@@ -33,10 +36,24 @@ const (
 	ModulePaymentRepo       string = "repositories.payment"
 	ModuleAccountWalletRepo string = "repositories.account-wallet"
 	ModuleJobRepo           string = "repositories.job"
+
+	ModulePlanRepo              string = "repositories.subscription-plan"
+	ModuleSubscriptionRepo      string = "repositories.subscription"
+	ModuleContractorAccountRepo string = "repositories.contractor-account"
+)
+
+// Adaptors
+const (
+	ModuleNotificationClient string = "adaptors.notification-client"
 )
 
 // Services
 const (
 	ModulePaymentService string = "services.payment"
 	ModuleWalletService  string = "services.wallet"
+
+	ModuleSubscriptionCore     string = "services.subscription-core"
+	ModuleSubscriptionService  string = "services.subscription"
+	ModuleQuotaService         string = "services.quota"
+	ModuleSubscriptionNotifier string = "services.subscription-notifier"
 )

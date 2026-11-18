@@ -2,6 +2,7 @@ package json
 
 import (
 	"encoding/json"
+	"payment-engine/pkg/errors"
 )
 
 type Encoder struct{}
@@ -14,7 +15,7 @@ func (e Encoder) Decode(data []byte) (interface{}, error) {
 	out := Encoder{}
 	err := json.Unmarshal(data, &out)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to decode json")
 	}
 	return out, nil
 }

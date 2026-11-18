@@ -8,4 +8,5 @@ const (
 	ModuleInternalWalletWriter     = `writers.internal_wallet.create`
 	ModuleGetWalletsWriter         = `writers.wallet.list`
 	ModuleWalletTransactionsWriter = `writers.wallet.transactions`
+	ModuleJSONWriter               = `writers.json`
 )

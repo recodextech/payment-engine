@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"payment-engine/internal/domain/adaptors"
 	"payment-engine/internal/domain/application"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -51,7 +51,7 @@ func (m *Reporter) Run() error {
 	m.logger.Info(fmt.Sprintf(`http server starting on %s/%s`, m.conf.HTTP.Host, m.conf.HTTP.Path))
 
 	if err := m.http.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return err
+		return fmt.Errorf("metrics http server failed: %w", err)
 	}
 
 	return nil

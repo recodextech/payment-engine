@@ -110,4 +110,6 @@ func initRoutes(r *Router, c container.Container) {
 			krouter.HandlerWithValidator(c.Resolve(validator.ModuleAccountIDValidator).(krouter.Validator)),
 			krouter.HandlerWithSuccessHandlerFunc(c.Resolve(writers.ModuleWalletTransactionsWriter).(responses.GenerateResponse).Response),
 		)).Methods(http.MethodGet)
+
+	initSubscriptionRoutes(r, c)
 }
